@@ -3,31 +3,28 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/bolatl/lenslocked/controllers"
+	"github.com/bolatl/lenslocked/templates"
+	"github.com/bolatl/lenslocked/views"
+	"github.com/go-chi/chi/v5"
 )
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charseft=utf-8")
-	fmt.Fprint(w, "<h1>Welcome</h1>")
-}
-
-func contactHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charseft=utf-8")
-	fmt.Fprint(w, "<h1>Contact Page</h1><p> mail me at <a href=\"mailto:bolatlabakbay@gmail.com\">bolatlabakbay@gmail.com</a>")
-}
-
-func pathHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/":
-		homeHandler(w, r)
-	case "/contact":
-		contactHandler(w, r)
-	default:
-		http.NotFound(w, r)
-	}
-}
-
 func main() {
-	http.HandleFunc("/", pathHandler)
+	r := chi.NewRouter()
+
+	tpl := views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))
+	r.Get("/", controllers.StaticHandler(tpl))
+
+	tpl = views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))
+	r.Get("/contact", controllers.StaticHandler(tpl))
+
+	tpl = views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))
+	r.Get("/faq", controllers.FAQ(tpl))
+
+	tpl = views.Must(views.ParseFS(templates.FS, "signup.gohtml", "tailwind.gohtml"))
+	r.Get("/signup", controllers.StaticHandler(tpl))
+
 	fmt.Println("Server starting on :3000...")
-	http.ListenAndServe(":3000", nil)
+	http.ListenAndServe(":3000", r)
 }
