@@ -9,7 +9,6 @@ import (
 	"github.com/bolatl/lenslocked/templates"
 	"github.com/bolatl/lenslocked/views"
 	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/csrf"
 )
 
 func main() {
@@ -33,8 +32,12 @@ func main() {
 	userService := models.UserService{
 		DB: db,
 	}
+	sessionService := models.SessionService{
+		DB: db,
+	}
 	userC := controllers.Users{
-		UserService: &userService,
+		UserService:    &userService,
+		SessionService: &sessionService,
 	}
 	userC.Templates.New = views.Must(views.ParseFS(templates.FS, "signup.gohtml", "tailwind.gohtml"))
 	userC.Templates.SignIn = views.Must(views.ParseFS(templates.FS, "signin.gohtml", "tailwind.gohtml"))
@@ -42,20 +45,23 @@ func main() {
 	r.Post("/users", userC.Create)
 	r.Get("/signin", userC.SignIn)
 	r.Post("/signin", userC.ProcessSignIn)
+	r.Post("/signout", userC.ProcessSignOut)
 	r.Get("/users/me", userC.CurrentUser)
 
-	csrfKey := "gFvi45R4fy5xNBlnEeZtQbfAVCYEIAUX"
-	csrfMw := csrf.Protect(
-		[]byte(csrfKey),
-		// TODO: Fix this before deploying
-		csrf.Secure(false),
-		csrf.TrustedOrigins([]string{
-			"http://localhost:3000",
-			"http://127.0.0.1:3000",
-			"https://127.0.0.1:3000",
-			"https://localhost:3000",
-		}),
-	)
+	// csrfKey := "gFvi45R4fy5xNBlnEeZtQbfAVCYEIAUX"
+	// csrfMw := csrf.Protect(
+	// 	[]byte(csrfKey),
+	// 	// TODO: Fix this before deploying
+	// 	csrf.Secure(false),
+	// 	csrf.SameSite(csrf.SameSiteLaxMode),
+	// 	csrf.TrustedOrigins([]string{
+	// 		"http://localhost:3000",
+	// 		"http://127.0.0.1:3000",
+	// 		"https://127.0.0.1:3000",
+	// 		"https://localhost:3000",
+	// 	}),
+	// )
 	fmt.Println("Server starting on :3000...")
-	http.ListenAndServe(":3000", csrfMw(r))
+	// http.ListenAndServe(":3000", csrfMw(r))
+	http.ListenAndServe(":3000", r)
 }
