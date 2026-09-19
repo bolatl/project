@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/bolatl/lenslocked/context"
 	"github.com/bolatl/lenslocked/models"
 )
 
@@ -85,21 +86,29 @@ func (u Users) ProcessSignIn(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Successful login: %+v", user)
 }
 
+// CurrentUser retrieves the current user from the context and displays their information.
 func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	token, err := readCookie(r, CookieSession)
-	if err != nil {
-		fmt.Println(err)
+	user := context.User(r.Context())
+	if user == nil {
 		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
-	user, err := u.SessionService.User(token)
-	if err != nil {
-		fmt.Println(err)
-		http.Redirect(w, r, "/signin", http.StatusFound)
-		return
-	}
-	fmt.Fprintf(w, "curr user: %s\n", user.Email)
-	fmt.Fprintf(w, "Headers: %+v\n", r.Header)
+	fmt.Fprintf(w, "Current user: %+v", user)
+
+	// token, err := readCookie(r, CookieSession)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Redirect(w, r, "/signin", http.StatusFound)
+	// 	return
+	// }
+	// user, err := u.SessionService.User(token)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Redirect(w, r, "/signin", http.StatusFound)
+	// 	return
+	// }
+	// fmt.Fprintf(w, "curr user: %s\n", user.Email)
+	// fmt.Fprintf(w, "Headers: %+v\n", r.Header)
 }
 
 func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {

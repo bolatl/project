@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/bolatl/lenslocked/controllers"
+	"github.com/bolatl/lenslocked/migrations"
 	"github.com/bolatl/lenslocked/models"
 	"github.com/bolatl/lenslocked/templates"
 	"github.com/bolatl/lenslocked/views"
@@ -28,7 +29,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = models.Migrate(db, "migrations")
+	err = models.MigrateFS(db, migrations.FS, ".")
 	if err != nil {
 		panic(err)
 	}

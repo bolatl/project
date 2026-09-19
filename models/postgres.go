@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -46,4 +47,10 @@ func Migrate(db *sql.DB, directory string) error {
 		return fmt.Errorf("migrate: %w", err)
 	}
 	return nil
+}
+
+func MigrateFS(db *sql.DB, migrationsFS embed.FS, directory string) error {
+	goose.SetBaseFS(migrationsFS)
+	defer goose.SetBaseFS(nil)
+	return Migrate(db, directory)
 }
