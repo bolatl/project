@@ -94,21 +94,6 @@ func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintf(w, "Current user: %+v", user)
-
-	// token, err := readCookie(r, CookieSession)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	http.Redirect(w, r, "/signin", http.StatusFound)
-	// 	return
-	// }
-	// user, err := u.SessionService.User(token)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	http.Redirect(w, r, "/signin", http.StatusFound)
-	// 	return
-	// }
-	// fmt.Fprintf(w, "curr user: %s\n", user.Email)
-	// fmt.Fprintf(w, "Headers: %+v\n", r.Header)
 }
 
 func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
@@ -125,4 +110,27 @@ func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	}
 	deleteCookie(w, CookieSession)
 	http.Redirect(w, r, "/signin", http.StatusFound)
+}
+
+type UserMiddleware struct {
+	SessionService *models.SessionService
+}
+
+func (m UserMiddleware) SetUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := readCookie(r, CookieSession)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		user, err := m.SessionService.User(token)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		ctx := r.Context()
+		ctx = context.WithUser(ctx, user)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
 }
